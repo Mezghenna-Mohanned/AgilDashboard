@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Calendar, MapPin, Users, DollarSign, Search, Filter, ChevronDown, Star } from 'lucide-react'
+import { Calendar, MapPin, Users, DollarSign, Search, Filter, ChevronDown, Star, Building, Briefcase, Microscope, Code, GraduationCap, TrendingUp, Shield } from 'lucide-react'
 import Header from '../components/Header'
 import { useEvents } from '../context/EventsContext'
 import { useAuth } from '../context/AuthContext'
@@ -25,6 +25,10 @@ export default function Events() {
   const categories = ['all', ...Array.from(new Set(events.map(e => e.category)))]
 
   const handleBooking = async (eventId: string) => {
+    if (!user) {
+      alert('Please log in to book events')
+      return
+    }
     setSelectedEvent(eventId)
     setShowBookingModal(true)
   }
@@ -34,7 +38,7 @@ export default function Events() {
     
     try {
       bookEvent(selectedEvent, numberOfTickets)
-      alert('Booking successful!')
+      alert('🎉 Booking successful! Check your bookings page.')
       setShowBookingModal(false)
       setNumberOfTickets(1)
       setSelectedEvent(null)
@@ -43,11 +47,23 @@ export default function Events() {
     }
   }
 
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'Technology': return <Code className="w-4 h-4" />
+      case 'Business': return <Briefcase className="w-4 h-4" />
+      case 'Science': return <Microscope className="w-4 h-4" />
+      case 'Education': return <GraduationCap className="w-4 h-4" />
+      case 'Finance': return <TrendingUp className="w-4 h-4" />
+      case 'Security': return <Shield className="w-4 h-4" />
+      default: return <Building className="w-4 h-4" />
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-900">
       <Header 
-        title="Browse Events"
-        subtitle="Discover and book amazing events happening near you"
+        title="Professional Events"
+        subtitle="Discover and attend professional conferences, workshops, and seminars"
         showSearch={false}
       />
 
@@ -57,7 +73,7 @@ export default function Events() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 w-5 h-5" />
           <input
             type="text"
-            placeholder="Search events..."
+            placeholder="Search professional events..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-slate-700/50 rounded-xl text-slate-300 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -79,7 +95,7 @@ export default function Events() {
 
           <button className="px-4 py-3 bg-slate-800/50 border border-slate-700/50 text-slate-300 rounded-xl hover:bg-slate-700/50 transition-all flex items-center gap-2">
             <Filter className="w-4 h-4" />
-            More Filters
+            Filters
           </button>
         </div>
       </div>
@@ -95,13 +111,14 @@ export default function Events() {
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
               <div className="absolute top-3 right-3">
-                <span className="px-3 py-1 bg-blue-500/90 backdrop-blur-sm text-white text-xs font-semibold rounded-full border border-blue-400/30">
+                <span className="px-3 py-1 bg-blue-500/90 backdrop-blur-sm text-white text-xs font-semibold rounded-full border border-blue-400/30 flex items-center gap-1">
+                  {getCategoryIcon(event.category)}
                   {event.category}
                 </span>
               </div>
               <div className="absolute top-3 left-3">
                 <button className="w-9 h-9 bg-slate-900/80 backdrop-blur-sm rounded-full flex items-center justify-center text-yellow-400 hover:bg-slate-900 transition-all">
-                  <Star className="w-4 h-4 fill-yellow-400" />
+                  <Star className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -119,7 +136,12 @@ export default function Events() {
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-slate-400 text-sm">
                   <Calendar className="w-4 h-4 text-blue-400" />
-                  <span>{new Date(event.date).toLocaleDateString()} at {event.time}</span>
+                  <span>{new Date(event.date).toLocaleDateString('en-US', { 
+                    weekday: 'short', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })} at {event.time}</span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-400 text-sm">
                   <MapPin className="w-4 h-4 text-green-400" />
@@ -137,14 +159,15 @@ export default function Events() {
                   <div className="text-white font-bold text-xl flex items-center gap-1">
                     <DollarSign className="w-4 h-4" />
                     {event.price}
+                    <span className="text-slate-400 text-sm font-normal">/person</span>
                   </div>
                 </div>
                 <button
                   onClick={() => handleBooking(event.id)}
-                  disabled={event.availableSeats === 0}
+                  disabled={event.availableSeats === 0 || !user}
                   className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {event.availableSeats === 0 ? 'Sold Out' : 'Book Now'}
+                  {!user ? 'Login to Book' : event.availableSeats === 0 ? 'Sold Out' : 'Register Now'}
                 </button>
               </div>
             </div>
@@ -172,7 +195,7 @@ export default function Events() {
               
               return (
                 <>
-                  <h3 className="text-white font-bold text-xl mb-4">Book Event</h3>
+                  <h3 className="text-white font-bold text-xl mb-4">Register for Event</h3>
                   <div className="space-y-4">
                     <div>
                       <img src={event.image} alt={event.title} className="w-full h-32 object-cover rounded-lg mb-3" />
@@ -189,9 +212,17 @@ export default function Events() {
                         min="1"
                         max={event.availableSeats}
                         value={numberOfTickets}
-                        onChange={(e) => setNumberOfTickets(parseInt(e.target.value))}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value)
+                          if (value > 0 && value <= event.availableSeats) {
+                            setNumberOfTickets(value)
+                          }
+                        }}
                         className="input-field"
                       />
+                      <p className="text-slate-400 text-xs mt-1">
+                        Maximum {event.availableSeats} tickets available
+                      </p>
                     </div>
 
                     <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700/50">
@@ -224,7 +255,7 @@ export default function Events() {
                         onClick={confirmBooking}
                         className="flex-1 btn-primary"
                       >
-                        Confirm Booking
+                        Confirm Registration
                       </button>
                     </div>
                   </div>

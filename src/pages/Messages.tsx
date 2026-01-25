@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Search, Send, Smile, Paperclip, MoreHorizontal, Phone, Video, Circle } from 'lucide-react'
+import { Search, Send, Smile, Paperclip, Phone, Video } from 'lucide-react'
 import Header from '../components/Header'
 
 type Message = {
@@ -21,12 +21,13 @@ type Contact = {
   online: boolean
 }
 
+type ConversationHistory = {
+  [contactId: string]: Message[]
+}
+
 const contacts: Contact[] = [
   { id: '1', name: 'Patrick Meyer', username: '@patrickmeyer', avatar: 'PM', lastMessage: 'Lorem ipsum dolor sit amet consectetur adipisicing non sed non molestie quis vitae lectus commodo.', timestamp: '5 min ago', online: true },
   { id: '2', name: 'Sophie Moore', username: '@sophiemoore', avatar: 'SM', lastMessage: 'Lorem ipsum dolor sit amet consectetur adipisicing non sed non molestie quis vitae lectus commodo.', timestamp: '15 min ago', online: true },
-  { id: '3', name: 'Matt Cannon', username: '@mattcannon', avatar: 'MC', lastMessage: 'Lorem ipsum dolor sit amet consectetur adipisicing non sed non molestie quis vitae lectus commodo.', timestamp: '15 min ago', online: false },
-  { id: '4', name: 'Graham Hills', username: '@grahamhills', avatar: 'GH', lastMessage: 'Lorem ipsum dolor sit amet consectetur adipisicing non sed non molestie quis vitae lectus commodo.', timestamp: '20 min ago', online: false },
-  { id: '5', name: 'Sandy Houston', username: '@sandyhouston', avatar: 'SH', lastMessage: 'Lorem ipsum dolor sit amet consectetur adipisicing non sed non molestie quis vitae lectus commodo.', timestamp: '25 min ago', online: false },
 ]
 
 function generateMeow(): string {
@@ -34,19 +35,26 @@ function generateMeow(): string {
   return Array(meowCount).fill('meow').join(' ')
 }
 
-export default function Messages() {
-  const [selectedContact, setSelectedContact] = useState<Contact>(contacts[1])
-  const [messages, setMessages] = useState<Message[]>([
-    { id: '1', text: 'Hello John! Hope you\'re doing well.', sender: 'contact', timestamp: new Date(Date.now() - 600000) },
+// Initial conversations for each contact
+const initialConversations: ConversationHistory = {
+  '1': [
+    { id: '1', text: 'Hello! Hope you\'re doing well.', sender: 'contact', timestamp: new Date(Date.now() - 600000) },
     { id: '2', text: 'I need your help with some reports, are you available for a call later today?', sender: 'contact', timestamp: new Date(Date.now() - 540000) },
-    { id: '3', text: 'Thank you', sender: 'contact', timestamp: new Date(Date.now() - 480000) },
-    { id: '4', text: 'Hey Sophie! How are you?', sender: 'user', timestamp: new Date(Date.now() - 420000) },
-    { id: '5', text: 'For sure, I\'ll be free after my 4-day, let me know what time works for you.', sender: 'user', timestamp: new Date(Date.now() - 360000) },
-    { id: '6', text: 'What about 2:00 PM? Works for you?', sender: 'contact', timestamp: new Date(Date.now() - 300000) },
-    { id: '7', image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400', text: '', sender: 'contact', timestamp: new Date(Date.now() - 240000) },
-  ])
+  ],
+  '2': [
+    { id: '1', text: 'Hey there! How are you?', sender: 'contact', timestamp: new Date(Date.now() - 420000) },
+    { id: '2', text: 'What about 2:00 PM? Works for you?', sender: 'contact', timestamp: new Date(Date.now() - 300000) },
+    { id: '3', image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400', text: '', sender: 'contact', timestamp: new Date(Date.now() - 240000) },
+  ],
+}
+
+export default function Messages() {
+  const [selectedContact, setSelectedContact] = useState<Contact>(contacts[0])
+  const [conversations, setConversations] = useState<ConversationHistory>(initialConversations)
   const [inputMessage, setInputMessage] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const currentMessages = conversations[selectedContact.id] || []
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -54,9 +62,13 @@ export default function Messages() {
 
   useEffect(() => {
     scrollToBottom()
-  }, [messages])
+  }, [currentMessages, selectedContact.id])
 
-  const handleSend = () => {
+  const handleSend = (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault()
+    }
+    
     if (!inputMessage.trim()) return
 
     const userMessage: Message = {
@@ -66,7 +78,12 @@ export default function Messages() {
       timestamp: new Date()
     }
 
-    setMessages(prev => [...prev, userMessage])
+    // Add user message to current conversation
+    setConversations(prev => ({
+      ...prev,
+      [selectedContact.id]: [...(prev[selectedContact.id] || []), userMessage]
+    }))
+    
     setInputMessage('')
 
     // Auto-reply with meow after a short delay
@@ -77,8 +94,11 @@ export default function Messages() {
         sender: 'contact',
         timestamp: new Date()
       }
-      setMessages(prev => [...prev, meowReply])
-    }, 1000 + Math.random() * 1000) // Random delay between 1-2 seconds
+      setConversations(prev => ({
+        ...prev,
+        [selectedContact.id]: [...(prev[selectedContact.id] || []), meowReply]
+      }))
+    }, 1000 + Math.random() * 1000)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -93,12 +113,12 @@ export default function Messages() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-slate-900">
+    <div className="bg-slate-900">
       <div className="p-6 border-b border-slate-800/50">
         <Header title="Messages" showSearch={true} />
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex" style={{ height: 'calc(100vh - 180px)' }}>
         {/* Contacts Sidebar */}
         <div className="w-80 border-r border-slate-800/50 flex flex-col bg-slate-900/50">
           {/* Active Contacts */}
@@ -108,7 +128,11 @@ export default function Messages() {
             </div>
             <div className="flex gap-3 overflow-x-auto pb-2">
               {contacts.filter(c => c.online).map(contact => (
-                <div key={contact.id} className="flex flex-col items-center gap-1.5 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
+                <div 
+                  key={contact.id} 
+                  className="flex flex-col items-center gap-1.5 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setSelectedContact(contact)}
+                >
                   <div className="relative">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm font-bold shadow-lg">
                       {contact.avatar}
@@ -126,7 +150,7 @@ export default function Messages() {
               <div className="flex items-center justify-between mb-3 px-1">
                 <h3 className="text-white font-semibold text-sm">Messages</h3>
                 <span className="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full text-xs font-bold border border-blue-500/30">
-                  45
+                  {contacts.length}
                 </span>
               </div>
 
@@ -190,11 +214,11 @@ export default function Messages() {
 
               <div className="flex items-center gap-2">
                 <button className="p-2.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all">
-                  <Call Sophie className="w-5 h-5" />
+                  <Video className="w-5 h-5" />
                 </button>
                 <button className="btn-primary flex items-center gap-2 shadow-lg shadow-blue-500/30">
                   <Phone className="w-4 h-4" />
-                  Call Sophie
+                  Call {selectedContact.name.split(' ')[0]}
                 </button>
               </div>
             </div>
@@ -202,10 +226,10 @@ export default function Messages() {
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-900/30">
-            {messages.map((message, index) => {
+            {currentMessages.map((message, index) => {
               const showTimestamp = index === 0 || 
-                messages[index - 1].sender !== message.sender ||
-                message.timestamp.getTime() - messages[index - 1].timestamp.getTime() > 300000
+                currentMessages[index - 1].sender !== message.sender ||
+                message.timestamp.getTime() - currentMessages[index - 1].timestamp.getTime() > 300000
 
               return (
                 <div key={message.id}>
@@ -236,7 +260,7 @@ export default function Messages() {
 
           {/* Input Area */}
           <div className="p-4 border-t border-slate-800/50 bg-slate-900/50">
-            <div className="flex items-end gap-3">
+            <form onSubmit={handleSend} className="flex items-end gap-3">
               <div className="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-2xl p-3 focus-within:border-blue-500/50 transition-all">
                 <textarea
                   value={inputMessage}
@@ -247,22 +271,22 @@ export default function Messages() {
                   className="w-full bg-transparent text-slate-200 placeholder:text-slate-500 resize-none focus:outline-none text-sm"
                 />
                 <div className="flex items-center gap-2 mt-2">
-                  <button className="text-slate-400 hover:text-slate-300 transition-colors">
+                  <button type="button" className="text-slate-400 hover:text-slate-300 transition-colors">
                     <Smile className="w-5 h-5" />
                   </button>
-                  <button className="text-slate-400 hover:text-slate-300 transition-colors">
+                  <button type="button" className="text-slate-400 hover:text-slate-300 transition-colors">
                     <Paperclip className="w-5 h-5" />
                   </button>
                 </div>
               </div>
               <button
-                onClick={handleSend}
+                type="submit"
                 disabled={!inputMessage.trim()}
                 className="p-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl hover:from-blue-700 hover:to-cyan-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/30"
               >
                 <Send className="w-5 h-5" />
               </button>
-            </div>
+            </form>
           </div>
         </div>
       </div>

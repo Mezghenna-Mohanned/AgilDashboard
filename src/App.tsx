@@ -1,143 +1,36 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
-import Dashboard from './pages/Dashboard'
-import Events from './pages/Events'
-import MyBookings from './pages/MyBookings'
-import OrganizerDashboard from './pages/OrganizerDashboard'
-import AdminDashboard from './pages/AdminDashboard'
-import Users from './pages/Users'
-import Messages from './pages/Messages'
-import AuthPage from './pages/Auth'
-import { AuthProvider, useAuth } from './context/AuthContext'
+import { AuthProvider } from './context/AuthContext'
 import { EventsProvider } from './context/EventsContext'
+import Dashboard from './pages/Dashboard'
+import AuthPage from './pages/Auth'
+import Events from './pages/Events'
+import AllPages from './pages/AllPages'
+import MyBookings from './pages/MyBookings'
+import Messages from './pages/Messages'
+import Reports from './pages/Reports'
+import AdminDashboard from './pages/AdminDashboard'
+import OrganizerDashboard from './pages/OrganizerDashboard'
+import Users from './pages/Users'
+import Features from './pages/Features'
+import UsersList from './pages/UsersList'
+import Pricing from './pages/Pricing'
+import Integrations from './pages/Integrations'
+import Settings from './pages/Settings'
+import './index.css'
 
-function ProtectedRoute({ children, allowedRoles }: { children: JSX.Element; allowedRoles?: string[] }) {
-  const { user, loading } = useAuth()
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
+function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode, requiredRole?: string }) {
+  const user = JSON.parse(localStorage.getItem('eventhub_auth_user') || 'null')
+  
   if (!user) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/login" />
   }
-
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />
+  
+  if (requiredRole && user.role !== requiredRole) {
+    return <Navigate to="/" />
   }
-
-  return children
-}
-
-function AppRoutes() {
-  const { user, loading } = useAuth()
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <Routes>
-      <Route path="/login" element={user ? <Navigate to="/" replace /> : <AuthPage />} />
-      <Route path="/register" element={user ? <Navigate to="/" replace /> : <AuthPage />} />
-      
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              {user?.role === 'admin' ? <AdminDashboard /> : 
-               user?.role === 'organizer' ? <OrganizerDashboard /> : 
-               <Dashboard />}
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      
-      <Route
-        path="/events"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <Events />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      
-      <Route
-        path="/my-bookings"
-        element={
-          <ProtectedRoute allowedRoles={['user']}>
-            <Layout>
-              <MyBookings />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      
-      <Route
-        path="/organizer"
-        element={
-          <ProtectedRoute allowedRoles={['organizer']}>
-            <Layout>
-              <OrganizerDashboard />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <Layout>
-              <AdminDashboard />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      
-      <Route
-        path="/users"
-        element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <Layout>
-              <Users />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      
-      {/* Add Messages Route */}
-      <Route
-        path="/messages"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <Messages />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  )
+  
+  return <>{children}</>
 }
 
 function App() {
@@ -145,7 +38,124 @@ function App() {
     <Router>
       <AuthProvider>
         <EventsProvider>
-          <AppRoutes />
+          <Routes>
+            <Route path="/login" element={<AuthPage />} />
+            <Route path="/register" element={<AuthPage />} />
+            
+            <Route path="/" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Dashboard />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/all-pages" element={
+              <ProtectedRoute>
+                <Layout>
+                  <AllPages />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/events" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Events />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/my-bookings" element={
+              <ProtectedRoute>
+                <Layout>
+                  <MyBookings />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/messages" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Messages />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/reports" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Reports />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/admin" element={
+              <ProtectedRoute requiredRole="admin">
+                <Layout>
+                  <AdminDashboard />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/organizer" element={
+              <ProtectedRoute requiredRole="organizer">
+                <Layout>
+                  <OrganizerDashboard />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/users" element={
+              <ProtectedRoute requiredRole="admin">
+                <Layout>
+                  <Users />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/features" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Features />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/users-list" element={
+              <ProtectedRoute>
+                <Layout>
+                  <UsersList />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/pricing" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Pricing />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/integrations" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Integrations />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Settings />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
         </EventsProvider>
       </AuthProvider>
     </Router>

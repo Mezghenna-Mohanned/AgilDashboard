@@ -25,26 +25,27 @@ export default function Sidebar() {
 
   const userMenuItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/', active: location.pathname === '/' },
-    { name: 'All pages', icon: Home, path: '/events', active: location.pathname === '/events' },
-    { name: 'Reports', icon: BarChart3, path: '/my-bookings', active: location.pathname === '/my-bookings' },
-    { name: 'Events', icon: Calendar, path: '/events', active: false },
-    { name: 'Organizers', icon: Users, path: '/organizers', active: false },
+    { name: 'All Pages', icon: Home, path: '/all-pages', active: location.pathname === '/all-pages' },
+    { name: 'Events', icon: Calendar, path: '/events', active: location.pathname === '/events' },
+    { name: 'My Bookings', icon: Ticket, path: '/my-bookings', active: location.pathname === '/my-bookings' },
+    { name: 'Reports', icon: BarChart3, path: '/reports', active: location.pathname === '/reports' },
   ]
 
   const organizerMenuItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/', active: location.pathname === '/' },
-    { name: 'All pages', icon: Home, path: '/events', active: location.pathname === '/events' },
-    { name: 'Reports', icon: BarChart3, path: '/my-bookings', active: false },
-    { name: 'Events', icon: Calendar, path: '/organizer', active: location.pathname === '/organizer' },
-    { name: 'Organizers', icon: Users, path: '/organizers', active: false },
+    { name: 'All Pages', icon: Home, path: '/all-pages', active: location.pathname === '/all-pages' },
+    { name: 'Events', icon: Calendar, path: '/events', active: location.pathname === '/events' },
+    { name: 'My Events', icon: Calendar, path: '/organizer', active: location.pathname === '/organizer' },
+    { name: 'Reports', icon: BarChart3, path: '/reports', active: location.pathname === '/reports' },
   ]
 
   const adminMenuItems = [
-    { name: 'Dashboard', icon: Shield, path: '/', active: location.pathname === '/' },
-    { name: 'All pages', icon: Home, path: '/events', active: location.pathname === '/events' },
+    { name: 'Dashboard', icon: LayoutDashboard, path: '/', active: location.pathname === '/' },
+    { name: 'All Pages', icon: Home, path: '/all-pages', active: location.pathname === '/all-pages' },
+    { name: 'Events', icon: Calendar, path: '/events', active: location.pathname === '/events' },
+    { name: 'Admin Panel', icon: Shield, path: '/admin', active: location.pathname === '/admin' },
+    { name: 'Users', icon: Users, path: '/users', active: location.pathname === '/users' },
     { name: 'Reports', icon: BarChart3, path: '/reports', active: location.pathname === '/reports' },
-    { name: 'Events', icon: Calendar, path: '/admin', active: location.pathname === '/admin' },
-    { name: 'Organizers', icon: Users, path: '/users', active: location.pathname === '/users' },
   ]
 
   const menuItems = 
@@ -54,10 +55,17 @@ export default function Sidebar() {
 
   const secondaryItems = [
     { name: 'Features', icon: Star, path: '/features' },
-    { name: 'Users', icon: Users, path: '/users-list' },
+    { name: 'Users List', icon: Users, path: '/users-list' },
     { name: 'Pricing', icon: DollarSign, path: '/pricing' },
     { name: 'Integrations', icon: Zap, path: '/integrations' },
   ]
+
+  const handleOrganizersClick = (e: React.MouseEvent) => {
+    if (user?.role !== 'admin' && user?.role !== 'organizer') {
+      e.preventDefault()
+      alert('⚠️ Access Denied\nOnly admins and organizers can view the organizers page.')
+    }
+  }
 
   return (
     <aside className="w-64 bg-slate-900/50 backdrop-blur-xl border-r border-slate-800/50 flex flex-col">
@@ -182,12 +190,6 @@ export default function Sidebar() {
         >
           <LogOut className="w-5 h-5" />
           <span className="font-medium">Log out</span>
-        </button>
-
-        {/* Get Template Button */}
-        <button className="w-full mt-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg py-3 px-4 font-medium hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg shadow-purple-500/30 flex items-center justify-center gap-2">
-          Get template
-          <ChevronRight className="w-4 h-4" />
         </button>
       </div>
     </aside>

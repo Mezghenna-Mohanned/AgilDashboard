@@ -51,6 +51,14 @@ export default function Dashboard() {
   const userBookings = bookings.filter(b => b.userId === user?.id && b.status === 'confirmed')
   const upcomingEvents = events.filter(e => e.status === 'approved' && new Date(e.date) > new Date()).slice(0, 5)
 
+  const handleExport = () => {
+    alert('📊 Dashboard data export initiated!\nYour report will be available for download shortly.')
+  }
+
+  const handleCreateReport = () => {
+    alert('📈 Custom report creation is in development!\nThis feature will be available in the next update.')
+  }
+
   return (
     <div className="min-h-screen bg-slate-900">
       <Header 
@@ -58,6 +66,8 @@ export default function Dashboard() {
         subtitle="Measure your advertising ROI and report website traffic."
         showExport={true}
         showCreateReport={true}
+        onExport={handleExport}
+        onCreateReport={handleCreateReport}
       />
 
       {/* Metrics Grid */}
@@ -87,7 +97,7 @@ export default function Dashboard() {
           color="green"
         />
         <MetricCard
-          title="tickets"
+          title="Tickets"
           value="2.3K"
           change="11.3%"
           isPositive={true}
@@ -247,7 +257,7 @@ export default function Dashboard() {
       {/* My Bookings Section */}
       {userBookings.length > 0 && (
         <div className="metric-card">
-          <h3 className="text-white font-semibold text-lg mb-4">My Upcoming Bookings</h3>
+          <h3 className="text-white font-semibold text-lg mb-4">My Upcoming Registrations</h3>
           <div className="space-y-3">
             {userBookings.slice(0, 3).map(booking => {
               const event = events.find(e => e.id === booking.eventId)
