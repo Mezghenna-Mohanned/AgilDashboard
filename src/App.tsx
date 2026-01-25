@@ -6,6 +6,7 @@ import MyBookings from './pages/MyBookings'
 import OrganizerDashboard from './pages/OrganizerDashboard'
 import AdminDashboard from './pages/AdminDashboard'
 import Users from './pages/Users'
+import Messages from './pages/Messages'
 import AuthPage from './pages/Auth'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { EventsProvider } from './context/EventsContext'
@@ -15,10 +16,10 @@ function ProtectedRoute({ children, allowedRoles }: { children: JSX.Element; all
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0e27]">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-400">Loading...</p>
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     )
@@ -40,10 +41,10 @@ function AppRoutes() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0e27]">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-400">Loading...</p>
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     )
@@ -117,6 +118,18 @@ function AppRoutes() {
           <ProtectedRoute allowedRoles={['admin']}>
             <Layout>
               <Users />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      
+      {/* Add Messages Route */}
+      <Route
+        path="/messages"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Messages />
             </Layout>
           </ProtectedRoute>
         }

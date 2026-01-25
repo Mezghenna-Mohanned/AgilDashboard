@@ -30,9 +30,27 @@ function readUsers(): StoredUser[] {
     const raw = window.localStorage.getItem(USERS_DB_KEY)
     if (!raw) {
       const defaultUsers: StoredUser[] = [
-        { id: '1', name: 'Admin User', email: 'admin@eventhub.com', password: 'admin123', role: 'admin' },
-        { id: '2', name: 'John Organizer', email: 'organizer@eventhub.com', password: 'organizer123', role: 'organizer' },
-        { id: '3', name: 'Jane User', email: 'user@eventhub.com', password: 'user123', role: 'user' }
+        { 
+          id: 'admin-001', 
+          name: 'Admin User', 
+          email: 'admin@eventhub.com', 
+          password: 'Admin@2026', 
+          role: 'admin' 
+        },
+        { 
+          id: 'org-001', 
+          name: 'John Organizer', 
+          email: 'organizer@eventhub.com', 
+          password: 'Organizer@2026', 
+          role: 'organizer' 
+        },
+        { 
+          id: 'user-001', 
+          name: 'Jane User', 
+          email: 'user@eventhub.com', 
+          password: 'User@2026', 
+          role: 'user' 
+        }
       ]
       window.localStorage.setItem(USERS_DB_KEY, JSON.stringify(defaultUsers))
       return defaultUsers
@@ -53,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    readUsers()
     try {
       const storedUser = window.localStorage.getItem(LOCAL_STORAGE_KEY)
       if (storedUser) {

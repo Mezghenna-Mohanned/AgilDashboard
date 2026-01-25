@@ -1,10 +1,11 @@
 import { useState } from 'react'
+import { Calendar, MapPin, Users, DollarSign, Plus, Edit2, Trash2 } from 'lucide-react'
+import Header from '../components/Header'
+import MetricCard from '../components/MetricCard'
 import { useEvents } from '../context/EventsContext'
-import { Calendar, Plus, Users, DollarSign, Eye, Clock, MapPin, X } from 'lucide-react'
 
 export default function OrganizerDashboard() {
-  const { getOrganizerEvents, createEvent, bookings, events } = useEvents()
-  const organizerEvents = getOrganizerEvents()
+  const { getOrganizerEvents, createEvent, events, bookings } = useEvents()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
@@ -14,14 +15,28 @@ export default function OrganizerDashboard() {
     location: '',
     category: 'Technology',
     price: 0,
-    capacity: 0,
+    capacity: 100,
     image: ''
   })
+
+  const organizerEvents = getOrganizerEvents()
+  const pendingEvents = organizerEvents.filter(e => e.status === 'pending')
+  const approvedEvents = organizerEvents.filter(e => e.status === 'approved')
+  const totalBookings = bookings.filter(b => 
+    organizerEvents.some(e => e.id === b.eventId) && b.status === 'confirmed'
+  ).length
+  const totalRevenue = bookings
+    .filter(b => organizerEvents.some(e => e.id === b.eventId) && b.status === 'confirmed')
+    .reduce((sum, b) => sum + b.totalPrice, 0)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      createEvent(formData)
+      createEvent({
+        ...formData,
+        image: formData.image || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800'
+      })
+      alert('Event created successfully! Waiting for admin approval.')
       setShowCreateModal(false)
       setFormData({
         title: '',
@@ -31,7 +46,7 @@ export default function OrganizerDashboard() {
         location: '',
         category: 'Technology',
         price: 0,
-        capacity: 0,
+        capacity: 100,
         image: ''
       })
     } catch (error) {
@@ -39,335 +54,275 @@ export default function OrganizerDashboard() {
     }
   }
 
-  const categories = ['Technology', 'Music', 'Business', 'Food', 'Art', 'Sports']
-
-  const totalRevenue = organizerEvents.reduce((sum, event) => {
-    const eventBookings = bookings.filter(b => b.eventId === event.id && b.status === 'confirmed')
-    return sum + eventBookings.reduce((bSum, b) => bSum + b.totalPrice, 0)
-  }, 0)
-
-  const totalTicketsSold = organizerEvents.reduce((sum, event) => {
-    const eventBookings = bookings.filter(b => b.eventId === event.id && b.status === 'confirmed')
-    return sum + eventBookings.reduce((bSum, b) => bSum + b.numberOfTickets, 0)
-  }, 0)
-
-  const pendingEvents = organizerEvents.filter(e => e.status === 'pending').length
-  const approvedEvents = organizerEvents.filter(e => e.status === 'approved').length
-
   return (
-    <div>
-      <div className="flex justify-between items-start mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Organizer Dashboard</h1>
-          <p className="text-gray-400">Manage your events and track performance</p>
-        </div>
+    <div className="min-h-screen bg-slate-900">
+      <Header 
+        title="Organizer Dashboard"
+        subtitle="Manage your events and track performance"
+      />
+
+      {/* Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <MetricCard
+          title="Total Events"
+          value={organizerEvents.length.toString()}
+          change="12%"
+          isPositive={true}
+          icon={Calendar}
+          color="blue"
+        />
+        <MetricCard
+          title="Approved Events"
+          value={approvedEvents.length.toString()}
+          change="8%"
+          isPositive={true}
+          icon={Calendar}
+          color="green"
+        />
+        <MetricCard
+          title="Total Bookings"
+          value={totalBookings.toString()}
+          change="24%"
+          isPositive={true}
+          icon={Users}
+          color="purple"
+        />
+        <MetricCard
+          title="Total Revenue"
+          value={`$${totalRevenue.toLocaleString()}`}
+          change="15%"
+          isPositive={true}
+          icon={DollarSign}
+          color="orange"
+        />
+      </div>
+
+      {/* Create Event Button */}
+      <div className="mb-6">
         <button
           onClick={() => setShowCreateModal(true)}
-          className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium hover:shadow-lg transition-all flex items-center gap-2"
+          className="btn-primary flex items-center gap-2"
         >
           <Plus className="w-5 h-5" />
-          Create Event
+          Create New Event
         </button>
       </div>
 
-      <div className="grid grid-cols-4 gap-6 mb-8">
-        <div className="bg-[#0f1535] rounded-xl p-6 border border-[#1e293b]">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-purple-400" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-white">{organizerEvents.length}</div>
-              <div className="text-gray-400 text-sm">Total Events</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-[#0f1535] rounded-xl p-6 border border-[#1e293b]">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-green-400" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-white">${totalRevenue.toFixed(2)}</div>
-              <div className="text-gray-400 text-sm">Total Revenue</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-[#0f1535] rounded-xl p-6 border border-[#1e293b]">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
-              <Users className="w-6 h-6 text-blue-400" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-white">{totalTicketsSold}</div>
-              <div className="text-gray-400 text-sm">Tickets Sold</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-[#0f1535] rounded-xl p-6 border border-[#1e293b]">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-lg bg-yellow-500/20 flex items-center justify-center">
-              <Clock className="w-6 h-6 text-yellow-400" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-white">{pendingEvents}</div>
-              <div className="text-gray-400 text-sm">Pending Approval</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-[#0f1535] rounded-xl border border-[#1e293b] overflow-hidden">
-        <div className="p-6 border-b border-[#1e293b]">
-          <h2 className="text-xl font-bold text-white">My Events</h2>
-        </div>
-
-        <div className="divide-y divide-[#1e293b]">
-          {organizerEvents.map(event => {
-            const eventBookings = bookings.filter(b => b.eventId === event.id && b.status === 'confirmed')
-            const ticketsSold = eventBookings.reduce((sum, b) => sum + b.numberOfTickets, 0)
-            const revenue = eventBookings.reduce((sum, b) => sum + b.totalPrice, 0)
-
-            return (
-              <div key={event.id} className="p-6 hover:bg-[#0a0e27] transition-colors">
-                <div className="flex gap-6">
-                  <div className="w-32 h-24 rounded-lg overflow-hidden flex-shrink-0">
-                    <img
-                      src={event.image}
-                      alt={event.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h3 className="text-lg font-bold text-white mb-1">{event.title}</h3>
-                        <div className="flex items-center gap-4 text-sm text-gray-400">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            <span>{new Date(event.date).toLocaleDateString()}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-4 h-4" />
-                            <span>{event.time}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-4 h-4" />
-                            <span>{event.location}</span>
-                          </div>
+      {/* Events List */}
+      <div className="space-y-6">
+        {pendingEvents.length > 0 && (
+          <div>
+            <h3 className="text-white font-semibold text-lg mb-4">Pending Approval</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {pendingEvents.map(event => (
+                <div key={event.id} className="metric-card border-2 border-yellow-500/30">
+                  <div className="flex gap-4">
+                    <img src={event.image} alt={event.title} className="w-32 h-24 object-cover rounded-lg flex-shrink-0" />
+                    <div className="flex-1">
+                      <h4 className="text-white font-semibold mb-2">{event.title}</h4>
+                      <div className="space-y-1 text-sm text-slate-400">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-3.5 h-3.5" />
+                          {new Date(event.date).toLocaleDateString()}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-3.5 h-3.5" />
+                          {event.location}
                         </div>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        event.status === 'approved' ? 'bg-green-500/20 text-green-400' :
-                        event.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                        'bg-red-500/20 text-red-400'
-                      }`}>
-                        {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                      <span className="inline-block mt-2 px-3 py-1 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-full text-xs font-semibold">
+                        Pending
                       </span>
                     </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-                    <div className="grid grid-cols-4 gap-4">
-                      <div className="bg-[#0a0e27] p-3 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">Tickets Sold</div>
-                        <div className="text-white font-semibold">{ticketsSold} / {event.capacity}</div>
+        <div>
+          <h3 className="text-white font-semibold text-lg mb-4">Approved Events</h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {approvedEvents.map(event => {
+              const eventBookings = bookings.filter(b => b.eventId === event.id && b.status === 'confirmed')
+              const revenue = eventBookings.reduce((sum, b) => sum + b.totalPrice, 0)
+
+              return (
+                <div key={event.id} className="metric-card">
+                  <div className="flex gap-4">
+                    <img src={event.image} alt={event.title} className="w-32 h-24 object-cover rounded-lg flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="text-white font-semibold">{event.title}</h4>
+                        <div className="flex gap-1">
+                          <button className="p-1.5 text-slate-400 hover:text-blue-400 hover:bg-slate-700/50 rounded transition-all">
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-700/50 rounded transition-all">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="bg-[#0a0e27] p-3 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">Available</div>
-                        <div className="text-white font-semibold">{event.availableSeats}</div>
+                      <div className="space-y-1 text-sm text-slate-400 mb-3">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-3.5 h-3.5" />
+                          {new Date(event.date).toLocaleDateString()}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-3.5 h-3.5" />
+                          {event.location}
+                        </div>
                       </div>
-                      <div className="bg-[#0a0e27] p-3 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">Revenue</div>
-                        <div className="text-white font-semibold">${revenue.toFixed(2)}</div>
-                      </div>
-                      <div className="bg-[#0a0e27] p-3 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">Price</div>
-                        <div className="text-white font-semibold">${event.price}</div>
+                      <div className="flex items-center gap-4 text-xs">
+                        <div>
+                          <span className="text-slate-500">Bookings: </span>
+                          <span className="text-white font-semibold">{eventBookings.length}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500">Revenue: </span>
+                          <span className="text-green-400 font-semibold">${revenue}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500">Seats: </span>
+                          <span className="text-white font-semibold">{event.availableSeats}/{event.capacity}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )
-          })}
-
-          {organizerEvents.length === 0 && (
-            <div className="p-12 text-center">
-              <Calendar className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-400 mb-2">No events yet</h3>
-              <p className="text-gray-500 mb-6">Create your first event to get started</p>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium hover:shadow-lg transition-all"
-              >
-                <Plus className="w-5 h-5" />
-                Create Event
-              </button>
-            </div>
-          )}
+              )
+            })}
+          </div>
         </div>
       </div>
 
+      {/* Create Event Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-6 z-50">
-          <div className="bg-[#0f1535] rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-[#1e293b]">
-            <div className="p-6 border-b border-[#1e293b] flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white">Create New Event</h2>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="w-8 h-8 rounded-lg bg-[#0a0e27] hover:bg-[#1a2147] flex items-center justify-center text-gray-400 hover:text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-6 space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Event Title
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full bg-[#0a0e27] border border-[#1e293b] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="Enter event title"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Description
-                </label>
-                <textarea
-                  required
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={4}
-                  className="w-full bg-[#0a0e27] border border-[#1e293b] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="Describe your event"
-                />
-              </div>
-
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 shadow-2xl my-8">
+            <h3 className="text-white font-bold text-xl mb-6">Create New Event</h3>
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Event Title</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    className="input-field"
+                    placeholder="Amazing Conference 2026"
+                  />
+                </div>
+
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Description</label>
+                  <textarea
+                    required
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    className="input-field resize-none"
+                    rows={3}
+                    placeholder="Describe your event..."
+                  />
+                </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Date
-                  </label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Date</label>
                   <input
                     type="date"
                     required
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className="w-full bg-[#0a0e27] border border-[#1e293b] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="input-field"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Time
-                  </label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Time</label>
                   <input
                     type="time"
                     required
                     value={formData.time}
                     onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                    className="w-full bg-[#0a0e27] border border-[#1e293b] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="input-field"
                   />
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Location
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="w-full bg-[#0a0e27] border border-[#1e293b] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="Event location"
-                />
-              </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Location</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    className="input-field"
+                    placeholder="Convention Center, City"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Category
-                </label>
-                <select
-                  required
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full bg-[#0a0e27] border border-[#1e293b] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Price ($)
-                  </label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Category</label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="input-field"
+                  >
+                    <option>Technology</option>
+                    <option>Music</option>
+                    <option>Business</option>
+                    <option>Food</option>
+                    <option>Art</option>
+                    <option>Sports</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Price ($)</label>
                   <input
                     type="number"
                     required
                     min="0"
-                    step="0.01"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
-                    className="w-full bg-[#0a0e27] border border-[#1e293b] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    placeholder="0.00"
+                    className="input-field"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Capacity
-                  </label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Capacity</label>
                   <input
                     type="number"
                     required
                     min="1"
                     value={formData.capacity}
                     onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) })}
-                    className="w-full bg-[#0a0e27] border border-[#1e293b] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    placeholder="100"
+                    className="input-field"
                   />
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Image URL
-                </label>
-                <input
-                  type="url"
-                  required
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  className="w-full bg-[#0a0e27] border border-[#1e293b] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="https://example.com/image.jpg"
-                />
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Image URL (optional)</label>
+                  <input
+                    type="url"
+                    value={formData.image}
+                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                    className="input-field"
+                    placeholder="https://..."
+                  />
+                </div>
               </div>
 
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 py-3 px-4 bg-[#0a0e27] text-gray-300 rounded-lg font-medium hover:bg-[#1a2147] transition-colors"
+                  className="flex-1 btn-secondary"
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium hover:shadow-lg transition-all"
-                >
+                <button type="submit" className="flex-1 btn-primary">
                   Create Event
                 </button>
               </div>

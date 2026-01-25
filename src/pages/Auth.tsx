@@ -1,268 +1,257 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { Calendar, Users, Sparkles } from 'lucide-react'
-
-type Mode = 'login' | 'register'
-type UserRole = 'user' | 'organizer' | 'admin'
+import { Calendar, Eye, EyeOff } from 'lucide-react'
 
 export default function AuthPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { login, register } = useAuth()
+  
+  const isLogin = location.pathname === '/login'
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'user' as 'user' | 'organizer' | 'admin'
+  })
 
-  const initialMode: Mode = location.pathname === '/register' ? 'register' : 'login'
-  const [mode, setMode] = useState<Mode>(initialMode)
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [role, setRole] = useState<UserRole>('user')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const isRegister = mode === 'register'
-
-  async function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
-    setLoading(true)
+    setError('')
+    setIsLoading(true)
+
     try {
-      if (isRegister) {
-        await register(name.trim(), email.trim(), password, role)
+      if (isLogin) {
+        await login(formData.email, formData.password)
       } else {
-        await login(email.trim(), password)
+        await register(formData.name, formData.email, formData.password, formData.role)
       }
       navigate('/')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
+      setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
-  function switchMode(next: Mode) {
-    setMode(next)
-    setError(null)
-    navigate(next === 'register' ? '/register' : '/login')
-  }
-
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-[#0a0e27] via-[#0f1535] to-[#020617] flex items-center justify-center px-6 py-10">
-      <div className="w-full max-w-6xl flex gap-0 rounded-3xl overflow-hidden shadow-2xl">
-        <div className="flex-1 bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600 p-12 flex flex-col justify-between text-white relative overflow-hidden">
-          <div className="absolute inset-0 bg-black opacity-10"></div>
-          <div className="absolute top-0 right-0 w-96 h-96 bg-white opacity-5 rounded-full -mr-48 -mt-48"></div>
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-white opacity-5 rounded-full -ml-48 -mb-48"></div>
-          
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-8">
-              <Calendar className="w-8 h-8" />
-              <span className="text-2xl font-bold">EventHub</span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex">
+      {/* Left Side - Welcome Message */}
+      <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-12 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 via-purple-600/20 to-cyan-600/20 animate-gradient"></div>
+        <div className="relative z-10 max-w-lg">
+          <div className="mb-8 flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/50">
+              <Calendar className="w-7 h-7 text-white" />
             </div>
-
-            <div className="space-y-6">
-              <h1 className="text-5xl font-bold leading-tight">
-                {isRegister ? 'Start Your Journey' : 'Welcome Back'}
-              </h1>
-              <p className="text-xl text-purple-100 leading-relaxed max-w-md">
-                {isRegister 
-                  ? 'Join thousands of users discovering and booking amazing events every day.'
-                  : 'Continue exploring incredible events and experiences tailored just for you.'}
-              </p>
-            </div>
+            <h1 className="text-3xl font-bold text-white">EventHub</h1>
           </div>
+          
+          <h2 className="text-5xl font-bold text-white mb-6 leading-tight">
+            {isLogin ? (
+              <>
+                Welcome Back.<br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
+                  Continue your journey
+                </span>
+              </>
+            ) : (
+              <>
+                Welcome.<br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
+                  Start your journey now
+                </span>
+              </>
+            )}
+          </h2>
+          
+          <p className="text-slate-300 text-lg leading-relaxed">
+            {isLogin 
+              ? 'with our Event booking system!'
+              : 'with our Event booking system!'}
+          </p>
 
-          <div className="relative z-10 grid grid-cols-3 gap-4">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-              <Calendar className="w-8 h-8 mb-2" />
-              <div className="text-2xl font-bold">500+</div>
-              <div className="text-sm text-purple-100">Events</div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-              <Users className="w-8 h-8 mb-2" />
-              <div className="text-2xl font-bold">10K+</div>
-              <div className="text-sm text-purple-100">Users</div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-              <Sparkles className="w-8 h-8 mb-2" />
-              <div className="text-2xl font-bold">4.9★</div>
-              <div className="text-sm text-purple-100">Rating</div>
+          {/* Decorative Elements */}
+          <div className="mt-12 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 opacity-80"></div>
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 opacity-80"></div>
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 opacity-80"></div>
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="flex-1 bg-white p-12 flex items-center justify-center">
-          <div className="w-full max-w-md">
-            <div className="mb-8">
-              <div className="flex gap-2 mb-6">
-                <button
-                  type="button"
-                  onClick={() => switchMode('login')}
-                  className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
-                    !isRegister
-                      ? 'bg-purple-600 text-white shadow-lg'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  Login
-                </button>
-                <button
-                  type="button"
-                  onClick={() => switchMode('register')}
-                  className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
-                    isRegister
-                      ? 'bg-purple-600 text-white shadow-lg'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  Register
-                </button>
-              </div>
+      {/* Right Side - Auth Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
+        <div className="w-full max-w-md">
+          {/* Mobile Logo */}
+          <div className="lg:hidden mb-8 flex items-center justify-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/50">
+              <Calendar className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-white">EventHub</h1>
+          </div>
 
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                {isRegister ? 'Create Account' : 'Sign In'}
+          {/* Auth Card */}
+          <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-8 shadow-2xl">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-white mb-2">
+                {isLogin ? 'Login to your account' : 'Create an account'}
               </h2>
-              <p className="text-gray-600">
-                {isRegister
-                  ? 'Fill in the details to get started'
-                  : 'Enter your credentials to continue'}
+              <p className="text-slate-400 text-sm">
+                {isLogin 
+                  ? "Don't have an account? " 
+                  : "Already have an account? "}
+                <button
+                  type="button"
+                  onClick={() => navigate(isLogin ? '/register' : '/login')}
+                  className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
+                >
+                  {isLogin ? 'Sign up' : 'Log in'}
+                </button>
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {isRegister && (
+            {/* Social Login Buttons */}
+            <div className="flex gap-3 mb-6">
+              <button className="flex-1 flex items-center justify-center gap-2 bg-white text-gray-700 rounded-lg py-2.5 font-medium hover:bg-gray-100 transition-colors">
+                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Google
+              </button>
+              <button className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white rounded-lg py-2.5 font-medium hover:bg-blue-700 transition-colors">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+                Facebook
+              </button>
+            </div>
+
+            <div className="relative mb-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-700"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-slate-800/50 text-slate-400">OR</span>
+              </div>
+            </div>
+
+            {error && (
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {!isLogin && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Full Name
                   </label>
                   <input
                     type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
                     required
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all"
-                    placeholder="John Doe"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Enter your full name"
+                    className="input-field"
                   />
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Email
                 </label>
                 <input
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all"
-                  placeholder="you@example.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="bob@mail.com"
+                  className="input-field"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center justify-between">
                   Password
+                  {isLogin && (
+                    <button type="button" className="text-blue-400 hover:text-blue-300 text-xs transition-colors">
+                      Forgot?
+                    </button>
+                  )}
                 </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all"
-                  placeholder="••••••••"
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder="Enter your password"
+                    className="input-field pr-12"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
               </div>
 
-              {isRegister && (
+              {!isLogin && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Account Type
                   </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setRole('user')}
-                      className={`p-4 rounded-lg border-2 transition-all ${
-                        role === 'user'
-                          ? 'border-purple-600 bg-purple-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <Users className={`w-6 h-6 mx-auto mb-2 ${role === 'user' ? 'text-purple-600' : 'text-gray-400'}`} />
-                      <div className={`font-medium ${role === 'user' ? 'text-purple-600' : 'text-gray-700'}`}>
-                        Attendee
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">Book events</div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setRole('organizer')}
-                      className={`p-4 rounded-lg border-2 transition-all ${
-                        role === 'organizer'
-                          ? 'border-purple-600 bg-purple-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <Calendar className={`w-6 h-6 mx-auto mb-2 ${role === 'organizer' ? 'text-purple-600' : 'text-gray-400'}`} />
-                      <div className={`font-medium ${role === 'organizer' ? 'text-purple-600' : 'text-gray-700'}`}>
-                        Organizer
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">Create events</div>
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {error && (
-                <div className="p-4 rounded-lg bg-red-50 border border-red-200">
-                  <p className="text-sm text-red-600">{error}</p>
+                  <select
+                    value={formData.role}
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+                    className="input-field"
+                  >
+                    <option value="user">User</option>
+                    <option value="organizer">Event Organizer</option>
+                  </select>
                 </div>
               )}
 
               <button
                 type="submit"
-                disabled={loading}
-                className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isLoading}
+                className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed mt-6"
               >
-                {loading ? 'Please wait...' : isRegister ? 'Create Account' : 'Sign In'}
+                {isLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    {isLogin ? 'Logging in...' : 'Creating account...'}
+                  </span>
+                ) : (
+                  isLogin ? 'Login now' : 'Create account'
+                )}
               </button>
-
-              {!isRegister && (
-                <div className="text-center">
-                  <button
-                    type="button"
-                    className="text-sm text-purple-600 hover:text-purple-700 font-medium"
-                  >
-                    Forgot password?
-                  </button>
-                </div>
-              )}
             </form>
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
-                <button
-                  type="button"
-                  onClick={() => switchMode(isRegister ? 'login' : 'register')}
-                  className="text-purple-600 hover:text-purple-700 font-medium"
-                >
-                  {isRegister ? 'Sign in' : 'Create one'}
-                </button>
-              </p>
-            </div>
-
-            {!isRegister && (
-              <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <p className="text-xs text-blue-800 font-medium mb-2">Demo Accounts:</p>
-                <div className="space-y-1 text-xs text-blue-700">
-                  <div>👤 User: user@eventhub.com / user123</div>
-                  <div>📅 Organizer: organizer@eventhub.com / organizer123</div>
-                  <div>👑 Admin: admin@eventhub.com / admin123</div>
-                </div>
+            {/* Demo Credentials */}
+            <div className="mt-6 p-4 bg-slate-900/50 border border-slate-700/50 rounded-lg">
+              <p className="text-xs text-slate-400 font-medium mb-2">Demo Credentials:</p>
+              <div className="space-y-1 text-xs text-slate-500">
+                <p>Admin: admin@eventhub.com / Admin@2026</p>
+                <p>Organizer: organizer@eventhub.com / Organizer@2026</p>
+                <p>User: user@eventhub.com / User@2026</p>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
