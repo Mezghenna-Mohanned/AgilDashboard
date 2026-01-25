@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom' // CHANGE THIS LINE
 import Layout from './components/Layout'
 import { AuthProvider } from './context/AuthContext'
 import { EventsProvider } from './context/EventsContext'
@@ -35,7 +35,7 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode,
 
 function App() {
   return (
-    <Router>
+    <Router> {/* This now uses HashRouter */}
       <AuthProvider>
         <EventsProvider>
           <Routes>
