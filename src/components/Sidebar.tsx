@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard,
   Star,
@@ -7,11 +7,15 @@ import {
   Plug,
   Settings,
   Search,
-  ChevronRight
+  ChevronRight,
+  LogOut,
 } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 
 export default function Sidebar() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
 
   const menuItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/', active: location.pathname === '/' },
@@ -26,7 +30,7 @@ export default function Sidebar() {
 
   const mainItems = [
     { name: 'Features', icon: Star, path: '/features' },
-    { name: 'Users', icon: User, path: '/users' },
+    { name: 'Users', icon: User, path: '/users', active: location.pathname === '/users' },
     { name: 'Pricing', icon: DollarSign, path: '/pricing' },
     { name: 'Integrations', icon: Plug, path: '/integrations' },
   ]
@@ -90,7 +94,11 @@ export default function Sidebar() {
             <Link
               key={item.name}
               to={item.path}
-              className="flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-[#0f1535] transition-colors"
+              className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                item.active
+                  ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-[#0f1535]'
+              }`}
             >
               <div className="flex items-center gap-3">
                 <Icon className="w-4 h-4" />
@@ -115,22 +123,39 @@ export default function Sidebar() {
         </div>
       </nav>
 
-      <div className="mt-auto pt-6 border-t border-[#1e293b]">
-        <Link
-          to="/account"
-          className="flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-[#0f1535] transition-colors"
+      <div className="mt-auto pt-6 border-t border-[#1e293b] space-y-3">
+        <button
+          type="button"
+          onClick={() => navigate('/account')}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-[#0f1535] transition-colors"
         >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold">
-              N
+              {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
             </div>
-            <div>
-              <div className="text-white text-sm">Nesrine djoul</div>
+            <div className="text-left">
+              <div className="text-white text-sm truncate max-w-[120px]">
+                {user?.name || user?.email || 'Guest user'}
+              </div>
               <div className="text-gray-500 text-xs">Account settings</div>
             </div>
           </div>
           <ChevronRight className="w-4 h-4" />
-        </Link>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            logout()
+            navigate('/login')
+          }}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-gray-500 hover:text-red-400 hover:bg-[#0f1535] transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <LogOut className="w-3 h-3" />
+            <span>Log out</span>
+          </div>
+        </button>
       </div>
     </aside>
   )

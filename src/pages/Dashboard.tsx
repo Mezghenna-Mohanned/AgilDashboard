@@ -1,4 +1,5 @@
 import Header from '../components/Header'
+import { useAuth } from '../context/AuthContext'
 import MetricCard from '../components/MetricCard'
 import { Eye, Users, UserPlus, Ticket } from 'lucide-react'
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
@@ -46,10 +47,14 @@ const visitorsData = [
 ]
 
 export default function Dashboard() {
+  const { user } = useAuth()
+
+  const firstName = user?.name?.split(' ')[0] ?? 'there'
+
   return (
     <div>
       <Header
-        title="Welcome back, Nesrine"
+        title={`Welcome back, ${firstName}`}
         subtitle="Measure your advertising ROI and report website traffic"
       />
 
