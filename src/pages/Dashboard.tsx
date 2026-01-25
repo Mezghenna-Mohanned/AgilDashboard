@@ -1,211 +1,210 @@
-import Header from '../components/Header'
 import { useAuth } from '../context/AuthContext'
-import MetricCard from '../components/MetricCard'
-import { Eye, Users, UserPlus, Ticket } from 'lucide-react'
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-
-const revenueData = [
-  { month: 'Jan', revenue: 45000, expenses: 32000 },
-  { month: 'Feb', revenue: 52000, expenses: 38000 },
-  { month: 'Mar', revenue: 61000, expenses: 42000 },
-  { month: 'Apr', revenue: 75000, expenses: 48000 },
-  { month: 'May', revenue: 95000, expenses: 55000 },
-  { month: 'Jun', revenue: 125200, expenses: 68000 },
-  { month: 'Jul', revenue: 142000, expenses: 75000 },
-  { month: 'Aug', revenue: 168000, expenses: 82000 },
-  { month: 'Sep', revenue: 185000, expenses: 88000 },
-  { month: 'Oct', revenue: 202000, expenses: 95000 },
-  { month: 'Nov', revenue: 218000, expenses: 102000 },
-  { month: 'Dec', revenue: 240800, expenses: 110000 },
-]
-
-const profitData = [
-  { month: '17 AM', value: 120 },
-  { month: '9 AM', value: 145 },
-  { month: '1 PM', value: 98 },
-  { month: '4 PM', value: 132 },
-  { month: '7 PM', value: 156 },
-  { month: '10 PM', value: 178 },
-  { month: '11 PM', value: 165 },
-  { month: '12 PM', value: 188 },
-]
-
-const sessionsData = [
-  { time: '12 AM', value: 250 },
-  { time: '3 AM', value: 180 },
-  { time: '6 AM', value: 320 },
-  { time: '9 AM', value: 420 },
-  { time: '12 PM', value: 280 },
-]
-
-const visitorsData = [
-  { time: '12 AM', value: 520 },
-  { time: '3 AM', value: 480 },
-  { time: '6 AM', value: 580 },
-  { time: '9 AM', value: 720 },
-  { time: '12 PM', value: 650 },
-]
+import { useEvents } from '../context/EventsContext'
+import { Calendar, Ticket, DollarSign, TrendingUp, MapPin, Clock } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 export default function Dashboard() {
   const { user } = useAuth()
+  const { events, getUserBookings } = useEvents()
+  
+  const userBookings = getUserBookings()
+  const activeBookings = userBookings.filter(b => b.status === 'confirmed')
+  const approvedEvents = events.filter(e => e.status === 'approved')
+  const upcomingEvents = approvedEvents
+    .filter(e => new Date(e.date) > new Date())
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .slice(0, 6)
+
+  const totalSpent = activeBookings.reduce((sum, b) => sum + b.totalPrice, 0)
+  const totalTickets = activeBookings.reduce((sum, b) => sum + b.numberOfTickets, 0)
 
   const firstName = user?.name?.split(' ')[0] ?? 'there'
 
   return (
     <div>
-      <Header
-        title={`Welcome back, ${firstName}`}
-        subtitle="Measure your advertising ROI and report website traffic"
-      />
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-white mb-2">Welcome back, {firstName}! 👋</h1>
+        <p className="text-gray-400">Discover amazing events and experiences</p>
+      </div>
 
       <div className="grid grid-cols-4 gap-6 mb-8">
-        <MetricCard
-          title="Pageviews"
-          value="50.8K"
-          change="+6.4%"
-          isPositive={true}
-          icon={Eye}
-        />
-        <MetricCard
-          title="Monthly users"
-          value="23.6K"
-          change="10.5%"
-          isPositive={false}
-          icon={Users}
-        />
-        <MetricCard
-          title="New sign ups"
-          value="756"
-          change="+13.2%"
-          isPositive={true}
-          icon={UserPlus}
-        />
-        <MetricCard
-          title="tickets"
-          value="2.3K"
-          change="15.2%"
-          isPositive={true}
-          icon={Ticket}
-        />
-      </div>
-
-      <div className="grid grid-cols-3 gap-6 mb-6">
-        <div className="col-span-2 bg-[#0f1535] rounded-xl p-6 border border-[#1e293b]">
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <div className="text-gray-400 text-sm mb-2">Total revenue</div>
-              <div className="flex items-center gap-3">
-                <span className="text-3xl font-bold text-white">$240.8K</span>
-                <span className="text-green-400 text-sm">+4.6%</span>
-              </div>
+        <div className="bg-[#0f1535] rounded-xl p-6 border border-[#1e293b] hover:border-purple-500/50 transition-all">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center">
+              <Calendar className="w-6 h-6 text-purple-400" />
             </div>
-            <div className="flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                <span className="text-gray-400">Revenue</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-cyan-400"></div>
-                <span className="text-gray-400">Expenses</span>
-              </div>
-              <select className="bg-[#0a0e27] text-gray-400 rounded px-2 py-1 text-sm border border-[#1e293b]">
-                <option>Jan 2024 - Dec 2024</option>
-              </select>
+            <div>
+              <div className="text-2xl font-bold text-white">{approvedEvents.length}</div>
+              <div className="text-gray-400 text-sm">Available Events</div>
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={revenueData}>
-              <defs>
-                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#a855f7" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#a855f7" stopOpacity={0}/>
-                </linearGradient>
-                <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-              <XAxis dataKey="month" stroke="#6b7280" style={{ fontSize: '12px' }} />
-              <YAxis stroke="#6b7280" style={{ fontSize: '12px' }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#0f1535',
-                  border: '1px solid #1e293b',
-                  borderRadius: '8px',
-                  color: '#fff'
-                }}
-              />
-              <Area type="monotone" dataKey="revenue" stroke="#a855f7" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
-              <Area type="monotone" dataKey="expenses" stroke="#06b6d4" strokeWidth={3} fillOpacity={1} fill="url(#colorExpenses)" />
-            </AreaChart>
-          </ResponsiveContainer>
+          <div className="text-xs text-green-400">+12 this week</div>
         </div>
 
-        <div className="bg-[#0f1535] rounded-xl p-6 border border-[#1e293b]">
-          <div className="flex justify-between items-start mb-6">
+        <div className="bg-[#0f1535] rounded-xl p-6 border border-[#1e293b] hover:border-purple-500/50 transition-all">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
+              <Ticket className="w-6 h-6 text-blue-400" />
+            </div>
             <div>
-              <div className="text-gray-400 text-sm mb-2">Total profit</div>
-              <div className="flex items-center gap-3">
-                <span className="text-3xl font-bold text-white">$144.6K</span>
-                <span className="text-green-400 text-sm">+10.5%</span>
-              </div>
+              <div className="text-2xl font-bold text-white">{activeBookings.length}</div>
+              <div className="text-gray-400 text-sm">My Bookings</div>
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={profitData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-              <XAxis dataKey="month" stroke="#6b7280" style={{ fontSize: '10px' }} />
-              <Bar dataKey="value" radius={[4, 4, 0, 0]} fill="#a855f7" />
-            </BarChart>
-          </ResponsiveContainer>
-          <div className="mt-4 text-right">
-            <p className="text-gray-400 text-xs">Last 12 months</p>
-            <button className="text-purple-400 text-xs hover:text-purple-300 transition-colors mt-1">
-              View report
-            </button>
+          <div className="text-xs text-blue-400">{totalTickets} tickets</div>
+        </div>
+
+        <div className="bg-[#0f1535] rounded-xl p-6 border border-[#1e293b] hover:border-purple-500/50 transition-all">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-green-400" />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-white">${totalSpent.toFixed(0)}</div>
+              <div className="text-gray-400 text-sm">Total Spent</div>
+            </div>
           </div>
+          <div className="text-xs text-green-400">On {activeBookings.length} events</div>
+        </div>
+
+        <div className="bg-[#0f1535] rounded-xl p-6 border border-[#1e293b] hover:border-purple-500/50 transition-all">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-yellow-400" />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-white">{upcomingEvents.length}</div>
+              <div className="text-gray-400 text-sm">Upcoming Events</div>
+            </div>
+          </div>
+          <div className="text-xs text-yellow-400">Next 30 days</div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
-        <div className="bg-[#0f1535] rounded-xl p-6 border border-[#1e293b]">
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <div className="text-gray-400 text-sm mb-2">Total sessions</div>
-              <div className="flex items-center gap-3">
-                <span className="text-3xl font-bold text-white">400</span>
-                <span className="text-green-400 text-sm">16.3%</span>
-              </div>
-            </div>
+      {activeBookings.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-white">My Active Bookings</h2>
+            <Link 
+              to="/my-bookings"
+              className="text-purple-400 hover:text-purple-300 text-sm font-medium"
+            >
+              View all →
+            </Link>
           </div>
-          <ResponsiveContainer width="100%" height={150}>
-            <LineChart data={sessionsData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-              <XAxis dataKey="time" stroke="#6b7280" style={{ fontSize: '11px' }} />
-              <Line type="monotone" dataKey="value" stroke="#a855f7" strokeWidth={2} dot={{ fill: '#a855f7', r: 4 }} />
-            </LineChart>
-          </ResponsiveContainer>
+
+          <div className="grid grid-cols-2 gap-6">
+            {activeBookings.slice(0, 2).map(booking => {
+              const event = events.find(e => e.id === booking.eventId)
+              if (!event) return null
+
+              return (
+                <div
+                  key={booking.id}
+                  className="bg-[#0f1535] rounded-xl border border-[#1e293b] overflow-hidden hover:border-purple-500/50 transition-all"
+                >
+                  <div className="h-40 overflow-hidden">
+                    <img
+                      src={event.image}
+                      alt={event.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="p-5">
+                    <h3 className="text-lg font-bold text-white mb-2">{event.title}</h3>
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center gap-2 text-sm text-gray-400">
+                        <Calendar className="w-4 h-4" />
+                        <span>{new Date(event.date).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-400">
+                        <Clock className="w-4 h-4" />
+                        <span>{event.time}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-400">
+                        <MapPin className="w-4 h-4" />
+                        <span className="line-clamp-1">{event.location}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between pt-4 border-t border-[#1e293b]">
+                      <div>
+                        <div className="text-xs text-gray-400">Tickets</div>
+                        <div className="text-white font-semibold">{booking.numberOfTickets}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs text-gray-400">Total</div>
+                        <div className="text-white font-semibold">${booking.totalPrice}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-white">Upcoming Events</h2>
+          <Link 
+            to="/events"
+            className="text-purple-400 hover:text-purple-300 text-sm font-medium"
+          >
+            Browse all →
+          </Link>
         </div>
 
-        <div className="bg-[#0f1535] rounded-xl p-6 border border-[#1e293b]">
-          <div className="flex justify-between items-start mb-6">
-            <div className="flex items-center gap-3">
-              <span className="text-green-400 text-sm">+1.2%</span>
-              <span className="text-gray-400 text-sm">10k visitors</span>
-            </div>
-            <button className="text-purple-400 text-xs hover:text-purple-300 transition-colors">
-              View report
-            </button>
-          </div>
-          <ResponsiveContainer width="100%" height={150}>
-            <LineChart data={visitorsData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-              <XAxis dataKey="time" stroke="#6b7280" style={{ fontSize: '11px' }} />
-              <Line type="monotone" dataKey="value" stroke="#a855f7" strokeWidth={2} dot={{ fill: '#a855f7', r: 4 }} />
-            </LineChart>
-          </ResponsiveContainer>
+        <div className="grid grid-cols-3 gap-6">
+          {upcomingEvents.map(event => (
+            <Link
+              key={event.id}
+              to="/events"
+              className="bg-[#0f1535] rounded-xl border border-[#1e293b] overflow-hidden hover:border-purple-500/50 transition-all group"
+            >
+              <div className="h-48 overflow-hidden">
+                <img
+                  src={event.image}
+                  alt={event.title}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                />
+              </div>
+              <div className="p-5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="px-2 py-1 bg-purple-600/20 text-purple-400 text-xs font-medium rounded">
+                    {event.category}
+                  </span>
+                  <span className="text-green-400 font-semibold">${event.price}</span>
+                </div>
+                <h3 className="text-lg font-bold text-white mb-2 line-clamp-1">{event.title}</h3>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-sm text-gray-400">
+                    <Calendar className="w-4 h-4" />
+                    <span>{new Date(event.date).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-400">
+                    <MapPin className="w-4 h-4" />
+                    <span className="line-clamp-1">{event.location}</span>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          ))}
         </div>
+
+        {upcomingEvents.length === 0 && (
+          <div className="bg-[#0f1535] rounded-xl border border-[#1e293b] p-12 text-center">
+            <Calendar className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-400 mb-2">No upcoming events</h3>
+            <p className="text-gray-500 mb-6">Check back soon for new events!</p>
+            <Link
+              to="/events"
+              className="inline-block px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium hover:shadow-lg transition-all"
+            >
+              Browse All Events
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   )
